@@ -16,7 +16,7 @@ app.use('/servicos', servicosRoutes);
 app.use('/profissionais', profissionaisRoutes);
 app.use('/agendamentos', agendamentosRoutes);
 
-sequelize.sync({ alter: ture }).then(() => {
+sequelize.sync({ alter: true }).then(() => {
   console.log('Banco de dados sincronizado.');
   app.listen(3000, () => {
     console.log('Servidor rodando na porta 3000');
