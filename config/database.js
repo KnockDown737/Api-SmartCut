@@ -1,20 +1,14 @@
 const Sequelize = require('sequelize');
 
-try {
-  const sequelize = new Sequelize(
-    process.env.MYSQL_DATABASE, 
-    process.env.MYSQL_USER, 
-    process.env.MYSQL_PASSWORD, 
-    {
-      host: process.env.MYSQL_HOST,
-      port: 3306,
-      dialect: process.env.MYSQL_DIALECT,
-      logging: console.log,  // Adicionando logs para verificar a execução
+// Conexão direta com o banco usando a URL completa
+const sequelize = new Sequelize('mysql://root:gXVMqqUuyVdCDGYNTDzxRkbOzJksVNAr@junction.proxy.rlwy.net:34068/railway', {
+  dialect: 'mysql',
+  dialectOptions: {
+    ssl: {
+      require: true, // Railway pode exigir SSL
+      rejectUnauthorized: false // Opcional, dependendo das configurações de segurança do banco
     }
-  );
+  }
+});
 
-  module.exports = sequelize;
-  console.log('Conexão com o banco de dados bem-sucedida!');
-} catch (error) {
-  console.error('Erro ao conectar ao banco de dados:', error);
-}
+module.exports = sequelize;
