@@ -18,7 +18,7 @@ app.use('/profissionais', profissionaisRoutes);
 app.use('/agendamentos', agendamentosRoutes);
 app.use('/clientes', clientesRoutes);  // Rota de clientes agora correta
 
-sequelize.sync({ force: true }).then(() => {
+sequelize.sync({ alter: true }).then(() => {
   console.log('Banco de dados sincronizado.');
   app.listen(3000, () => {
     console.log('Servidor rodando na porta 3000');
