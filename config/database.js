@@ -7,7 +7,7 @@ try {
     process.env.MYSQL_PASSWORD, 
     {
       host: process.env.MYSQL_HOST,
-      port: process.env.MYSQLPORT || 3306,
+      port: process.env.MYSQLPORT,
       dialect: process.env.MYSQL_DIALECT,
       logging: console.log,  // Adicionando logs para verificar a execução
     }
