@@ -2,7 +2,7 @@ const express = require('express');
 const Agendamento = require('../models/Agendamento');
 const Servico = require('../models/Servico');
 const Profissional = require('../models/Profissional');
-const Cliente = require('../models/Cliente'); // Certifique-se de importar o modelo de Cliente
+const Cliente = require('../models/cliente'); // Certifique-se de importar o modelo de Cliente
 const router = express.Router();
 
 router.post('/', async (req, res) => {
