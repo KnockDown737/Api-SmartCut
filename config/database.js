@@ -9,7 +9,6 @@ try {
       host: process.env.MYSQL_HOST,
       port: process.env.MYSQL_PORT || 3306,
       dialect: process.env.MYSQL_DIALECT,
-      logging: console.log, 
     }
   );
 
