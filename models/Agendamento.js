@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 const Servico = require('./Servico');
 const Profissional = require('./Profissional');
-const Cliente = require('./Cliente'); // Substitui Usuario por Cliente
+const Cliente = require('./cliente'); // Substitui Usuario por Cliente
 
 const Agendamento = sequelize.define('Agendamento', {
   data: {
