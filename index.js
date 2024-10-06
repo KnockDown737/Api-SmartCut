@@ -6,7 +6,7 @@ const sequelize = require('./config/database');
 const servicosRoutes = require('./routes/servicos');
 const profissionaisRoutes = require('./routes/profissionais');
 const agendamentosRoutes = require('./routes/agendamentos');
-const clientesRoutes = require('./routes/clientes'); // Caminho correto para o arquivo de clientes
+const clientesRoutes = require('./routes/Cliente'); // Caminho correto para o arquivo de clientes
 
 const app = express();
 
