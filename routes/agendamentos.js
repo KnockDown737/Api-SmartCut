@@ -8,8 +8,6 @@ const router = express.Router();
 router.post('/', async (req, res) => {
   const { data, horario, servicoId, profissionalId } = req.body;
 
-  console.log('Recebido:', { data, horario, servicoId, profissionalId, status });
-
   try {
     
     const agendamento = await Agendamento.create({
@@ -25,8 +23,6 @@ router.post('/', async (req, res) => {
     if (!servico) {
       return res.status(404).json({ error: 'Serviço não encontrado' });
     }
-
-      console.log('Agendamento criado:', agendamento);
 
    
     res.json({
