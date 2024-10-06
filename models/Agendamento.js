@@ -15,7 +15,7 @@ const Agendamento = sequelize.define('Agendamento', {
   },
   status: {
     type: DataTypes.ENUM('aberto', 'concluido', 'cancelado'),  // Enum para diferentes status
-    allowNull: false,
+    allowNull: true,
     defaultValue: 'aberto',  // O status padrão será 'aberto'
   }
 });
