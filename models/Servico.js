@@ -10,6 +10,10 @@ const Servico = sequelize.define('Servico', {
     type: DataTypes.FLOAT,
     allowNull: false,
   },
+  duracao: {  // Novo atributo 'duracao'
+    type: DataTypes.INTEGER, // duração em minutos
+    allowNull: false,
+  },
 });
 
 module.exports = Servico;
