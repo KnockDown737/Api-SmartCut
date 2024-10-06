@@ -4,24 +4,27 @@ const Servico = require('../models/Servico');
 const Profissional = require('../models/Profissional');
 const router = express.Router();
 
+
 router.post('/', async (req, res) => {
-  const { data, horario, servicoId, profissionalId, status } = req.body;  // Adicionei o campo status
+  const { data, horario, servicoId, profissionalId } = req.body;
 
   try {
+    
     const agendamento = await Agendamento.create({
       data,
       horario,
       ServicoId: servicoId,
       ProfissionalId: profissionalId,
-      status: status || 'aberto',  // Define 'aberto' como padrão se o status não for passado
     });
 
+    
     const servico = await Servico.findByPk(servicoId);
 
     if (!servico) {
       return res.status(404).json({ error: 'Serviço não encontrado' });
     }
 
+   
     res.json({
       agendamento,
       servicoNome: servico.nome,
@@ -33,8 +36,10 @@ router.post('/', async (req, res) => {
   }
 });
 
+
 router.get('/', async (req, res) => {
   try {
+
     const agendamentos = await Agendamento.findAll({
       include: [
         {
@@ -46,7 +51,8 @@ router.get('/', async (req, res) => {
           attributes: ['nome'], 
         },
       ],
-    });
+    }); 
+
 
     res.json(agendamentos);
   } catch (error) {
