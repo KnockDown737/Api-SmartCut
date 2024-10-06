@@ -1,6 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
-const Cliente = require('../models/cliente');
+const Cliente = require('../models/Cliente');
 const router = express.Router();
 
 // Criar um novo cliente
