@@ -16,7 +16,7 @@ app.use(bodyParser.json());
 app.use('/servicos', servicosRoutes);
 app.use('/profissionais', profissionaisRoutes);
 app.use('/agendamentos', agendamentosRoutes);
-app.use('/clientes', clientesRoutes);  // Adicionando a rota de clientes
+app.use('/Clientes', clientesRoutes);  // Adicionando a rota de clientes
 
 sequelize.sync({ force: true }).then(() => {
   console.log('Banco de dados sincronizado.');
