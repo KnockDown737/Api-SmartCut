@@ -6,7 +6,7 @@ const sequelize = require('./config/database');
 const servicosRoutes = require('./routes/servicos');
 const profissionaisRoutes = require('./routes/profissionais');
 const agendamentosRoutes = require('./routes/agendamentos');
-const clientesRoutes = require('./routes/Clientes'); // Certifique-se de adicionar a rota de clientes
+const clientesRoutes = require('./routes/clientes'); // Certifique-se de adicionar a rota de clientes
 
 const app = express();
 
@@ -16,7 +16,7 @@ app.use(bodyParser.json());
 app.use('/servicos', servicosRoutes);
 app.use('/profissionais', profissionaisRoutes);
 app.use('/agendamentos', agendamentosRoutes);
-app.use('/Clientes', clientesRoutes);  // Adicionando a rota de clientes
+app.use('/clientes', clientesRoutes);  // Adicionando a rota de clientes
 
 sequelize.sync({ force: true }).then(() => {
   console.log('Banco de dados sincronizado.');
