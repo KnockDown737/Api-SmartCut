@@ -63,9 +63,11 @@ router.post('/', async (req, res) => {
 });
 
 router.get('/', async (req, res) => {
+  const { clienteId } = req.query; // Captura o ID do cliente da query string
   try {
-    console.log('Buscando todos os agendamentos...'); // Log antes da busca de agendamentos
+    const whereCondition = clienteId ? { ClienteId: clienteId } : {}; // Condição de filtro se clienteId for fornecido
     const agendamentos = await Agendamento.findAll({
+      where: whereCondition,
       include: [
         {
           model: Servico,
@@ -82,12 +84,12 @@ router.get('/', async (req, res) => {
       ],
     });
 
-    console.log('Agendamentos encontrados:', agendamentos); // Log após busca bem-sucedida
     res.json(agendamentos);
   } catch (error) {
-    console.error('Erro ao listar agendamentos:', error); // Log detalhado do erro
-    res.status(500).json({ error: 'Erro ao listar agendamentos', details: error.message });
+    console.error('Erro ao listar agendamentos:', error);
+    res.status(500).json({ error: 'Erro ao listar agendamentos' });
   }
 });
+
 
 module.exports = router;
