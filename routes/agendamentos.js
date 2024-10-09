@@ -5,8 +5,11 @@ const Profissional = require('../models/Profissional');
 const Cliente = require('../models/Cliente'); // Certifique-se de importar o modelo de Cliente
 const router = express.Router();
 
+const CLIENTE_PADRAO_ID = 1;  // Defina o ID do cliente padrão
+
+// Função para criar agendamento
 router.post('/', async (req, res) => {
-  const { data, horario, servicoId, profissionalId, status, clienteId } = req.body;
+  const { data, horario, servicoId, profissionalId, status, clienteId, nomeCliente } = req.body;
 
   try {
     console.log('Iniciando o processo de criação de agendamento...'); // Log de início
@@ -27,25 +30,37 @@ router.post('/', async (req, res) => {
       return res.status(404).json({ error: 'Profissional não encontrado' });
     }
 
-    // Verifique se o cliente existe
-    console.log('Verificando se o cliente existe, ID do cliente:', clienteId); // Log do ID do cliente
-    const cliente = await Cliente.findByPk(clienteId);
-    if (!cliente) {
-      console.log('Cliente não encontrado.'); // Log caso o cliente não seja encontrado
-      return res.status(404).json({ error: 'Cliente não encontrado' });
+    let cliente;
+    // Verifique se foi passado o clienteId (caso o cliente esteja logado no app)
+    if (clienteId) {
+      console.log('Verificando se o cliente existe, ID do cliente:', clienteId); // Log do ID do cliente
+      cliente = await Cliente.findByPk(clienteId);
+      if (!cliente) {
+        console.log('Cliente não encontrado.'); // Log caso o cliente não seja encontrado
+        return res.status(404).json({ error: 'Cliente não encontrado' });
+      }
+    } else {
+      // Se não houver clienteId (caso o admin esteja criando), usa o cliente padrão
+      cliente = await Cliente.findByPk(CLIENTE_PADRAO_ID);
+
+      // Atualiza o nome do cliente padrão com o nome do cliente inserido pelo admin
+      if (nomeCliente) {
+        console.log('Atualizando nome do cliente padrão para:', nomeCliente); // Log do nome do cliente
+        await Cliente.update({ nome: nomeCliente }, { where: { id: CLIENTE_PADRAO_ID } });
+      }
     }
 
     // Cria o agendamento com os dados fornecidos
     console.log('Criando o agendamento com os dados fornecidos:'); // Log antes da criação
-    console.log('Data:', data, 'Horário:', horario, 'Status:', status, 'ServicoId:', servicoId, 'ProfissionalId:', profissionalId, 'ClienteId:', clienteId);
-    
+    console.log('Data:', data, 'Horário:', horario, 'Status:', status, 'ServicoId:', servicoId, 'ProfissionalId:', profissionalId, 'ClienteId:', cliente.id);
+
     const agendamento = await Agendamento.create({
       data,
       horario,
       ServicoId: servicoId,
       ProfissionalId: profissionalId,
-      status, // Incluindo o status do agendamento
-      ClienteId: clienteId // Incluindo o ClienteId
+      status: status || 'aberto', // O status padrão será 'aberto'
+      ClienteId: cliente.id // Associa o agendamento ao cliente (padrão ou autenticado)
     });
 
     console.log('Agendamento criado com sucesso:', agendamento); // Log após criação bem-sucedida
@@ -62,8 +77,10 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Função para listar agendamentos
 router.get('/', async (req, res) => {
   const { clienteId } = req.query; // Captura o ID do cliente da query string
+
   try {
     const whereCondition = clienteId ? { ClienteId: clienteId } : {}; // Condição de filtro se clienteId for fornecido
     const agendamentos = await Agendamento.findAll({
@@ -90,6 +107,5 @@ router.get('/', async (req, res) => {
     res.status(500).json({ error: 'Erro ao listar agendamentos' });
   }
 });
-
 
 module.exports = router;
