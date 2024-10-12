@@ -14,12 +14,15 @@ const Agendamento = sequelize.define('Agendamento', {
     allowNull: false,
   },
   status: {
-    type: DataTypes.ENUM('aberto', 'concluido', 'cancelado'),  // Enum para diferentes status
+    type: DataTypes.ENUM('aberto', 'concluido', 'cancelado'), // Enum para diferentes status
     allowNull: true,
-    defaultValue: 'aberto',  // O status padrão será 'aberto'
+    defaultValue: 'aberto', // O status padrão será 'aberto'
+  },
+  nomeCliente: {
+    type: DataTypes.STRING, // Novo campo para armazenar o nome do cliente
+    allowNull: true, // Será preenchido apenas para agendamentos do admin
   }
 });
-
 
 Agendamento.belongsTo(Servico, { foreignKey: 'ServicoId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
 Agendamento.belongsTo(Profissional, { foreignKey: 'ProfissionalId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
