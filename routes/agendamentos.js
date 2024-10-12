@@ -12,78 +12,68 @@ router.post('/', async (req, res) => {
   const { data, horario, servicoId, profissionalId, status, clienteId, nomeCliente } = req.body;
 
   try {
-    console.log('Iniciando o processo de criação de agendamento...'); // Log de início
+    console.log('Iniciando o processo de criação de agendamento...');
 
-    // Verifique se o serviço existe
-    console.log('Verificando se o serviço existe, ID do serviço:', servicoId); // Log do ID do serviço
+    // Verifica se o serviço existe
     const servico = await Servico.findByPk(servicoId);
     if (!servico) {
-      console.log('Serviço não encontrado.'); // Log caso o serviço não seja encontrado
       return res.status(404).json({ error: 'Serviço não encontrado' });
     }
 
-    // Verifique se o profissional existe
-    console.log('Verificando se o profissional existe, ID do profissional:', profissionalId); // Log do ID do profissional
+    // Verifica se o profissional existe
     const profissional = await Profissional.findByPk(profissionalId);
     if (!profissional) {
-      console.log('Profissional não encontrado.'); // Log caso o profissional não seja encontrado
       return res.status(404).json({ error: 'Profissional não encontrado' });
     }
 
     let cliente;
     let nomeClienteUsado = nomeCliente;
 
-    // Verifique se foi passado o clienteId (caso o cliente esteja logado no app)
+    // Verifica se foi passado o clienteId (caso o cliente esteja logado no app)
     if (clienteId) {
-      console.log('Verificando se o cliente existe, ID do cliente:', clienteId); // Log do ID do cliente
       cliente = await Cliente.findByPk(clienteId);
       if (!cliente) {
-        console.log('Cliente não encontrado.'); // Log caso o cliente não seja encontrado
         return res.status(404).json({ error: 'Cliente não encontrado' });
       }
-      nomeClienteUsado = cliente.nome; // Usa o nome real do cliente logado
+      nomeClienteUsado = cliente.nome;
     } else {
       // Se não houver clienteId (caso o admin esteja criando), usa o cliente padrão
       cliente = await Cliente.findByPk(CLIENTE_PADRAO_ID);
-
-      // Usa o nome passado pelo admin, ou do cliente padrão se não houver nome fornecido
-      nomeClienteUsado = nomeCliente;
+      nomeClienteUsado = nomeCliente || cliente.nome;
     }
 
-    // Cria o agendamento com os dados fornecidos
-    console.log('Criando o agendamento com os dados fornecidos:'); // Log antes da criação
-    console.log('Data:', data, 'Horário:', horario, 'Status:', status, 'ServicoId:', servicoId, 'ProfissionalId:', profissionalId, 'ClienteId:', cliente.id, 'NomeCliente:', nomeClienteUsado);
+    // Ajusta a data para garantir que ela está correta no formato ISO
+    const formattedDate = new Date(data);
+    const isoDate = formattedDate.toISOString().split('T')[0]; // Formata a data para ISO sem a parte do horário
 
+    // Cria o agendamento
     const agendamento = await Agendamento.create({
-      data,
-      horario,
+      data: isoDate,
+      horario, // Mantém o horário como foi fornecido
       ServicoId: servicoId,
       ProfissionalId: profissionalId,
-      status: status || 'aberto', // O status padrão será 'aberto'
-      ClienteId: cliente.id, // Associa o agendamento ao cliente (padrão ou autenticado)
-      nomeCliente: nomeClienteUsado // Armazena o nome do cliente (logado ou fornecido pelo admin)
+      status: status || 'aberto',
+      ClienteId: cliente.id,
+      nomeCliente: nomeClienteUsado,
     });
 
-    console.log('Agendamento criado com sucesso:', agendamento); // Log após criação bem-sucedida
-
-    // Resposta com detalhes do agendamento e o nome do serviço
     res.json({
       agendamento,
       servicoNome: servico.nome,
       preco: servico.preco, 
     });
   } catch (error) {
-    console.error('Erro ao criar agendamento:', error); // Log detalhado do erro
+    console.error('Erro ao criar agendamento:', error);
     res.status(500).json({ error: 'Erro ao criar o agendamento', details: error.message });
   }
 });
 
 // Função para listar agendamentos
 router.get('/', async (req, res) => {
-  const { clienteId } = req.query; // Captura o ID do cliente da query string
+  const { clienteId } = req.query; 
 
   try {
-    const whereCondition = clienteId ? { ClienteId: clienteId } : {}; // Condição de filtro se clienteId for fornecido
+    const whereCondition = clienteId ? { ClienteId: clienteId } : {}; 
     const agendamentos = await Agendamento.findAll({
       where: whereCondition,
       include: [
@@ -96,13 +86,19 @@ router.get('/', async (req, res) => {
           attributes: ['nome'],
         },
         {
-          model: Cliente, // Inclui também o Cliente na resposta
+          model: Cliente,
           attributes: ['nome'],
         },
       ],
     });
 
-    res.json(agendamentos);
+    // Formata a resposta antes de enviá-la para o cliente
+    const agendamentosFormatados = agendamentos.map(agendamento => ({
+      ...agendamento.dataValues,
+      data: new Date(agendamento.data).toISOString().split('T')[0] // Formata a data para enviar corretamente
+    }));
+
+    res.json(agendamentosFormatados);
   } catch (error) {
     console.error('Erro ao listar agendamentos:', error);
     res.status(500).json({ error: 'Erro ao listar agendamentos' });
@@ -118,7 +114,6 @@ router.put('/:id', async (req, res) => {
     if (!agendamento) {
       return res.status(404).json({ error: 'Agendamento não encontrado' });
     }
-    // Atualize os campos do agendamento
     agendamento.data = data || agendamento.data;
     agendamento.horario = horario || agendamento.horario;
     agendamento.ServicoId = servicoId || agendamento.ServicoId;
@@ -132,6 +127,5 @@ router.put('/:id', async (req, res) => {
     res.status(500).json({ error: 'Erro ao atualizar agendamento', details: error.message });
   }
 });
-
 
 module.exports = router;
