@@ -46,10 +46,8 @@ router.post('/', async (req, res) => {
       // Se não houver clienteId (caso o admin esteja criando), usa o cliente padrão
       cliente = await Cliente.findByPk(CLIENTE_PADRAO_ID);
 
-      // Se o admin não passar um nome, usa o nome do cliente padrão
-      if (!nomeCliente) {
-        nomeClienteUsado = cliente.nome;
-      }
+      // Usa o nome passado pelo admin, ou do cliente padrão se não houver nome fornecido
+      nomeClienteUsado = nomeCliente || cliente.nome;
     }
 
     // Cria o agendamento com os dados fornecidos
