@@ -111,4 +111,24 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Função para cancelar agendamento (rota PUT)
+router.put('/:id/cancelar', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const agendamento = await Agendamento.findByPk(id);
+    if (!agendamento) {
+      return res.status(404).json({ error: 'Agendamento não encontrado' });
+    }
+
+    // Atualiza o status do agendamento para 'cancelado'
+    agendamento.status = 'cancelado';
+    await agendamento.save();
+
+    res.json({ message: 'Agendamento cancelado com sucesso', agendamento });
+  } catch (error) {
+    console.error('Erro ao cancelar agendamento:', error);
+    res.status(500).json({ error: 'Erro ao cancelar o agendamento' });
+  }
+});
+
 module.exports = router;
