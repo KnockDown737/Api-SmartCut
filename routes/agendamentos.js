@@ -76,8 +76,8 @@ router.get('/historico', async (req, res) => {
 
   try {
     const whereCondition = clienteId 
-      ? { ClienteId: clienteId, status: ['concluído', 'cancelado'] } 
-      : { status: ['concluído', 'cancelado'] }; // Filtro pelo status e opcionalmente pelo ClienteId
+      ? { ClienteId: clienteId, status: { [Op.in]: ['concluído', 'cancelado'] } } 
+      : { status: { [Op.in]: ['concluído', 'cancelado'] } }; // Filtro pelo status e opcionalmente pelo ClienteId
 
     const agendamentosHistorico = await Agendamento.findAll({
       where: whereCondition,
@@ -97,6 +97,13 @@ router.get('/historico', async (req, res) => {
       ],
     });
 
+    // Retorna o histórico de agendamentos
+    res.json(agendamentosHistorico);
+  } catch (error) {
+    console.error('Erro ao listar histórico de agendamentos:', error);
+    res.status(500).json({ error: 'Erro ao listar histórico de agendamentos' });
+  }
+});
 
 // Função para listar agendamentos
 router.get('/', async (req, res) => {
