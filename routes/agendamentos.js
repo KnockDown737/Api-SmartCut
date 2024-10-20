@@ -4,6 +4,7 @@ const Servico = require('../models/Servico');
 const Profissional = require('../models/Profissional');
 const Cliente = require('../models/Cliente'); // Certifique-se de importar o modelo de Cliente
 const router = express.Router();
+const { Op } = require('sequelize'); // Para usar operadores como [Op.in]
 
 const CLIENTE_PADRAO_ID = 1;  // Defina o ID do cliente padrão
 
@@ -68,8 +69,6 @@ router.post('/', async (req, res) => {
   }
 });
 
-
-
 // Rota para listar agendamentos com status "concluído" e "cancelado"
 router.get('/historico', async (req, res) => {
   const { clienteId } = req.query;
@@ -105,7 +104,7 @@ router.get('/historico', async (req, res) => {
   }
 });
 
-// Função para listar agendamentos
+// Função para listar todos os agendamentos (usado pelo admin para ver tudo)
 router.get('/', async (req, res) => {
   const { clienteId } = req.query; 
 
