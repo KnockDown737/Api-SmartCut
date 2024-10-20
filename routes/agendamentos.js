@@ -2,9 +2,9 @@ const express = require('express');
 const Agendamento = require('../models/Agendamento');
 const Servico = require('../models/Servico');
 const Profissional = require('../models/Profissional');
-const Cliente = require('../models/Cliente'); // Certifique-se de importar o modelo de Cliente
+const Cliente = require('../models/Cliente');
+const { Op } = require('sequelize'); // Certifique-se de importar o Op para realizar as operações
 const router = express.Router();
-const { Op } = require('sequelize'); // Para usar operadores como [Op.in]
 
 const CLIENTE_PADRAO_ID = 1;  // Defina o ID do cliente padrão
 
@@ -50,7 +50,7 @@ router.post('/', async (req, res) => {
     // Cria o agendamento
     const agendamento = await Agendamento.create({
       data: isoDate,
-      horario, // Mantém o horário como foi fornecido
+      horario,
       ServicoId: servicoId,
       ProfissionalId: profissionalId,
       status: status || 'aberto',
@@ -76,7 +76,7 @@ router.get('/historico', async (req, res) => {
   try {
     const whereCondition = clienteId 
       ? { ClienteId: clienteId, status: { [Op.in]: ['concluído', 'cancelado'] } } 
-      : { status: { [Op.in]: ['concluído', 'cancelado'] } }; // Filtro pelo status e opcionalmente pelo ClienteId
+      : { status: { [Op.in]: ['concluído', 'cancelado'] } };
 
     const agendamentosHistorico = await Agendamento.findAll({
       where: whereCondition,
@@ -96,7 +96,6 @@ router.get('/historico', async (req, res) => {
       ],
     });
 
-    // Retorna o histórico de agendamentos
     res.json(agendamentosHistorico);
   } catch (error) {
     console.error('Erro ao listar histórico de agendamentos:', error);
@@ -104,7 +103,7 @@ router.get('/historico', async (req, res) => {
   }
 });
 
-// Função para listar todos os agendamentos (usado pelo admin para ver tudo)
+// Função para listar todos os agendamentos (usada para o admin ou sem filtro)
 router.get('/', async (req, res) => {
   const { clienteId } = req.query; 
 
@@ -128,10 +127,9 @@ router.get('/', async (req, res) => {
       ],
     });
 
-    // Formata a resposta antes de enviá-la para o cliente
     const agendamentosFormatados = agendamentos.map(agendamento => ({
       ...agendamento.dataValues,
-      data: new Date(agendamento.data).toISOString().split('T')[0] // Formata a data para enviar corretamente
+      data: new Date(agendamento.data).toISOString().split('T')[0]
     }));
 
     res.json(agendamentosFormatados);
@@ -141,7 +139,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Função para cancelar agendamento (rota PUT)
+// Função para cancelar/agendar atualização de agendamento (rota PUT)
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { data, horario, servicoId, profissionalId, status, nomeCliente } = req.body;
