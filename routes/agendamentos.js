@@ -68,6 +68,36 @@ router.post('/', async (req, res) => {
   }
 });
 
+
+
+// Rota para listar agendamentos com status "concluído" e "cancelado"
+router.get('/historico', async (req, res) => {
+  const { clienteId } = req.query;
+
+  try {
+    const whereCondition = clienteId 
+      ? { ClienteId: clienteId, status: ['concluído', 'cancelado'] } 
+      : { status: ['concluído', 'cancelado'] }; // Filtro pelo status e opcionalmente pelo ClienteId
+
+    const agendamentosHistorico = await Agendamento.findAll({
+      where: whereCondition,
+      include: [
+        {
+          model: Servico,
+          attributes: ['nome', 'preco'],
+        },
+        {
+          model: Profissional,
+          attributes: ['nome'],
+        },
+        {
+          model: Cliente,
+          attributes: ['nome'],
+        },
+      ],
+    });
+
+
 // Função para listar agendamentos
 router.get('/', async (req, res) => {
   const { clienteId } = req.query; 
