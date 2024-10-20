@@ -69,6 +69,49 @@ router.post('/', async (req, res) => {
   }
 });
 
+
+// Função para listar agendamentos com filtro de status "aberto"
+router.get('/', async (req, res) => {
+  const { clienteId, status } = req.query;
+
+  try {
+    // Filtra o cliente e o status
+    const whereCondition = {
+      ClienteId: clienteId,
+      status: status || 'aberto'  // Default to 'aberto' if no status is passed
+    };
+
+    const agendamentos = await Agendamento.findAll({
+      where: whereCondition,
+      include: [
+        {
+          model: Servico,
+          attributes: ['nome', 'preco'],
+        },
+        {
+          model: Profissional,
+          attributes: ['nome'],
+        },
+        {
+          model: Cliente,
+          attributes: ['nome'],
+        },
+      ],
+    });
+
+    res.json(agendamentos);
+  } catch (error) {
+    console.error('Erro ao listar agendamentos:', error);
+    res.status(500).json({ error: 'Erro ao listar agendamentos' });
+  }
+});
+
+
+
+
+
+
+
 // Rota para listar agendamentos com status "concluído" e "cancelado"
 router.get('/historico', async (req, res) => {
   const { clienteId } = req.query;
