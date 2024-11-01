@@ -139,6 +139,32 @@ router.get('/historico', async (req, res) => {
   }
 });
 
+// Exemplo de rota no arquivo routes/agendamentos.js
+router.get('/seguinte', async (req, res) => {
+  const { clienteId } = req.query;
+
+  try {
+    const seguinteAgendamento = await Agendamento.findOne({
+      where: {
+        ClienteId: clienteId,
+        status: 'aberto', // ou 'pendente', dependendo da lógica do seu sistema
+      },
+      order: [['data', 'ASC']], // Ordena para pegar o mais próximo em data e hora
+    });
+
+    if (seguinteAgendamento) {
+      res.json(seguinteAgendamento);
+    } else {
+      res.status(404).json({ message: 'Nenhum agendamento próximo encontrado' });
+    }
+  } catch (error) {
+    console.error('Erro ao buscar próximo agendamento:', error);
+    res.status(500).json({ message: 'Erro ao buscar próximo agendamento' });
+  }
+});
+
+
+
 // Função para cancelar/agendar atualização de agendamento (rota PUT)
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
