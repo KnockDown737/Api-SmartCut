@@ -140,6 +140,7 @@ router.get('/historico', async (req, res) => {
 });
 
 // Exemplo de rota no arquivo routes/agendamentos.js
+// Exemplo de rota no arquivo routes/agendamentos.js
 router.get('/seguinte', async (req, res) => {
   const { clienteId } = req.query;
 
@@ -150,6 +151,16 @@ router.get('/seguinte', async (req, res) => {
         status: 'aberto', // ou 'pendente', dependendo da lógica do seu sistema
       },
       order: [['data', 'ASC']], // Ordena para pegar o mais próximo em data e hora
+      include: [
+        {
+          model: Servico,
+          attributes: ['nome', 'preco', 'duracao'], // Inclui os dados desejados do serviço
+        },
+        {
+          model: Profissional,
+          attributes: ['nome', 'especialidade'], // Inclui os dados desejados do profissional
+        }
+      ]
     });
 
     if (seguinteAgendamento) {
