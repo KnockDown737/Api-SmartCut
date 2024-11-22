@@ -6,7 +6,7 @@ const Cliente = require('./Cliente'); // Substitui Usuario por Cliente
 
 const Agendamento = sequelize.define('Agendamento', {
   data: {
-    type: DataTypes.DATE,
+    type: DataTypes.DATEONLY, // Altera para DATEONLY para armazenar apenas a data
     allowNull: false,
   },
   horario: {
@@ -19,7 +19,7 @@ const Agendamento = sequelize.define('Agendamento', {
     defaultValue: 'aberto', // O status padrão será 'aberto'
   },
   nomeCliente: {
-    type: DataTypes.STRING, // Novo campo para armazenar o nome do cliente
+    type: DataTypes.STRING, // Campo para armazenar o nome do cliente
     allowNull: true, // Será preenchido apenas para agendamentos do admin
   }
 });
