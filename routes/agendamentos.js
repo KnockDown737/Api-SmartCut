@@ -2,8 +2,7 @@ const express = require('express');
 const Agendamento = require('../models/Agendamento');
 const Servico = require('../models/Servico');
 const Profissional = require('../models/Profissional');
-const Cliente = require('../models/Cliente');
-const { Op } = require('sequelize'); // Certifique-se de importar o Op para realizar as operações
+const Cliente = require('../models/Cliente'); // Certifique-se de importar o modelo de Cliente
 const router = express.Router();
 
 const CLIENTE_PADRAO_ID = 1;  // Defina o ID do cliente padrão
@@ -43,11 +42,14 @@ router.post('/', async (req, res) => {
       nomeClienteUsado = nomeCliente || cliente.nome;
     }
 
+    // Ajusta a data para garantir que ela está correta no formato ISO
+    const formattedDate = new Date(data);
+    const isoDate = formattedDate.toISOString().split('T')[0]; // Formata a data para ISO sem a parte do horário
 
     // Cria o agendamento
     const agendamento = await Agendamento.create({
       data: isoDate,
-      horario,
+      horario, // Mantém o horário como foi fornecido
       ServicoId: servicoId,
       ProfissionalId: profissionalId,
       status: status || 'aberto',
@@ -66,79 +68,11 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Função para listar agendamentos com filtro de status "aberto"
-router.get('/abertos', async (req, res) => {
-  const { clienteId, status } = req.query;
 
-  try {
-    // Filtra o cliente e o status
-    const whereCondition = {
-      ClienteId: clienteId,
-      status: status || 'aberto'  // Default to 'aberto' if no status is passed
-    };
-
-    const agendamentos = await Agendamento.findAll({
-      where: whereCondition,
-      include: [
-        {
-          model: Servico,
-          attributes: ['nome', 'preco'],
-        },
-        {
-          model: Profissional,
-          attributes: ['nome'],
-        },
-        {
-          model: Cliente,
-          attributes: ['nome'],
-        },
-      ],
-    });
-
-    res.json(agendamentos);
-  } catch (error) {
-    console.error('Erro ao listar agendamentos:', error);
-    res.status(500).json({ error: 'Erro ao listar agendamentos' });
-  }
-});
-
-// Rota para listar agendamentos com status "concluído" e "cancelado"
-router.get('/historico', async (req, res) => {
-  const { clienteId } = req.query;
-
-  try {
-    const whereCondition = clienteId 
-      ? { ClienteId: clienteId, status: { [Op.in]: ['concluído', 'cancelado'] } } 
-      : { status: { [Op.in]: ['concluído', 'cancelado'] } };
-
-    const agendamentosHistorico = await Agendamento.findAll({
-      where: whereCondition,
-      include: [
-        {
-          model: Servico,
-          attributes: ['nome', 'preco'],
-        },
-        {
-          model: Profissional,
-          attributes: ['nome'],
-        },
-        {
-          model: Cliente,
-          attributes: ['nome'],
-        },
-      ],
-    });
-
-    res.json(agendamentosHistorico);
-  } catch (error) {
-    console.error('Erro ao listar histórico de agendamentos:', error);
-    res.status(500).json({ error: 'Erro ao listar histórico de agendamentos' });
-  }
-});
-
-// Função para listar todos os agendamentos (usada para o admin ou sem filtro)
+// Função para listar agendamentos
 router.get('/', async (req, res) => {
   const { clienteId } = req.query; 
+
   try {
     const whereCondition = clienteId ? { ClienteId: clienteId } : {}; 
     const agendamentos = await Agendamento.findAll({
@@ -158,17 +92,21 @@ router.get('/', async (req, res) => {
         },
       ],
     });
+
+    // Formata a resposta antes de enviá-la para o cliente
     const agendamentosFormatados = agendamentos.map(agendamento => ({
       ...agendamento.dataValues,
-      data: new Date(agendamento.data).toISOString().split('T')[0]
+      data: new Date(agendamento.data).toISOString().split('T')[0] // Formata a data para enviar corretamente
     }));
+
     res.json(agendamentosFormatados);
   } catch (error) {
     console.error('Erro ao listar agendamentos:', error);
     res.status(500).json({ error: 'Erro ao listar agendamentos' });
   }
 });
-// Função para cancelar/agendar atualização de agendamento (rota PUT)
+
+// Função para cancelar agendamento (rota PUT)
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { data, horario, servicoId, profissionalId, status, nomeCliente } = req.body;
