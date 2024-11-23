@@ -6,12 +6,15 @@ const Cliente = require('./Cliente'); // Substitui Usuario por Cliente
 
 const Agendamento = sequelize.define('Agendamento', {
   data: {
-    type: DataTypes.DATEONLY, // Altera para DATEONLY para armazenar apenas a data
+    type: DataTypes.DATEONLY, // Armazena apenas a data (YYYY-MM-DD)
     allowNull: false,
   },
   horario: {
-    type: DataTypes.STRING,
+    type: DataTypes.TIME, // Altere para TIME para armazenar horários no formato HH:mm:ss
     allowNull: false,
+    validate: {
+      is: /^([01]\d|2[0-3]):([0-5]\d)$/, // Aceita apenas formato HH:mm (24 horas)
+    },
   },
   status: {
     type: DataTypes.ENUM('aberto', 'concluido', 'cancelado'), // Enum para diferentes status
@@ -21,8 +24,9 @@ const Agendamento = sequelize.define('Agendamento', {
   nomeCliente: {
     type: DataTypes.STRING, // Campo para armazenar o nome do cliente
     allowNull: true, // Será preenchido apenas para agendamentos do admin
-  }
+  },
 });
+
 
 Agendamento.belongsTo(Servico, { foreignKey: 'ServicoId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
 Agendamento.belongsTo(Profissional, { foreignKey: 'ProfissionalId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
