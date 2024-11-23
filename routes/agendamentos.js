@@ -106,7 +106,7 @@ router.get('/historico', async (req, res) => {
 });
 
 // Rota para listar todos os agendamentos
-router.get('/todos', async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const agendamentos = await Agendamento.findAll({
       include: [
