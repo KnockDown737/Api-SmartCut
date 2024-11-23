@@ -176,6 +176,50 @@ router.get('/seguinte', async (req, res) => {
   }
 });
 
+// Rota para listar apenas os agendamentos em aberto do cliente logado
+router.get('/abertos', async (req, res) => {
+  const { clienteId } = req.query;
+
+  if (!clienteId) {
+    return res.status(400).json({ error: 'Cliente ID é obrigatório' });
+  }
+
+  try {
+    const agendamentos = await Agendamento.findAll({
+      where: {
+        ClienteId: clienteId,
+        status: 'aberto',
+      },
+      include: [
+        {
+          model: Servico,
+          attributes: ['nome', 'preco'],
+        },
+        {
+          model: Profissional,
+          attributes: ['nome'],
+        },
+        {
+          model: Cliente,
+          attributes: ['nome'],
+        },
+      ],
+      order: [['data', 'ASC'], ['horario', 'ASC']],
+    });
+
+    if (agendamentos.length === 0) {
+      return res.status(200).json([]); // Retorna um array vazio se nenhum agendamento for encontrado
+    }
+
+    res.json(agendamentos);
+  } catch (error) {
+    console.error('Erro ao buscar agendamentos em aberto:', error);
+    res.status(500).json({ error: 'Erro ao buscar agendamentos em aberto', details: error.message });
+  }
+});
+
+
+
 
 // Função para cancelar/agendar atualização de agendamento (rota PUT)
 router.put('/:id', async (req, res) => {
