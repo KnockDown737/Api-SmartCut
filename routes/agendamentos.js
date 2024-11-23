@@ -43,9 +43,6 @@ router.post('/', async (req, res) => {
       nomeClienteUsado = nomeCliente || cliente.nome;
     }
 
-    // Ajusta a data para garantir que ela está correta no formato ISO
-    const formattedDate = new Date(data);
-    const isoDate = formattedDate.toISOString().split('T')[0]; // Formata a data para ISO sem a parte do horário
 
     // Cria o agendamento
     const agendamento = await Agendamento.create({
