@@ -1,12 +1,12 @@
 const express = require('express');
+const { Op } = require('sequelize');
 const Agendamento = require('../models/Agendamento');
 const Servico = require('../models/Servico');
 const Profissional = require('../models/Profissional');
 const Cliente = require('../models/Cliente');
-const { Op } = require('sequelize'); // Certifique-se de importar o Op para realizar as operações
 const router = express.Router();
 
-const CLIENTE_PADRAO_ID = 1;  // Defina o ID do cliente padrão
+const CLIENTE_PADRAO_ID = 1; // ID do cliente padrão
 
 // Função para criar agendamento
 router.post('/', async (req, res) => {
@@ -43,11 +43,15 @@ router.post('/', async (req, res) => {
       nomeClienteUsado = nomeCliente || cliente.nome;
     }
 
+    // Formata o horário para "HH:mm:ss"
+    const horarioFormatado = horario.includes('AM') || horario.includes('PM')
+      ? new Date(`1970-01-01T${horario}`).toTimeString().split(' ')[0]
+      : horario;
 
     // Cria o agendamento
     const agendamento = await Agendamento.create({
-      data: isoDate,
-      horario,
+      data, // A data já deve estar no formato "YYYY-MM-DD"
+      horario: horarioFormatado,
       ServicoId: servicoId,
       ProfissionalId: profissionalId,
       status: status || 'aberto',
@@ -58,7 +62,7 @@ router.post('/', async (req, res) => {
     res.json({
       agendamento,
       servicoNome: servico.nome,
-      preco: servico.preco, 
+      preco: servico.preco,
     });
   } catch (error) {
     console.error('Erro ao criar agendamento:', error);
@@ -67,80 +71,14 @@ router.post('/', async (req, res) => {
 });
 
 
-
-router.get('/todos', async (req, res) => {
-  try {
-    const agendamentos = await Agendamento.findAll({
-      include: [
-        {
-          model: Servico,
-          attributes: ['nome', 'preco'],
-        },
-        {
-          model: Profissional,
-          attributes: ['nome'],
-        },
-        {
-          model: Cliente,
-          attributes: ['nome'],
-        },
-      ],
-      order: [['data', 'ASC']], // Ordena os agendamentos pela data
-    });
-
-    res.json(agendamentos);
-  } catch (error) {
-    console.error('Erro ao listar todos os agendamentos:', error);
-    res.status(500).json({ error: 'Erro ao listar todos os agendamentos' });
-  }
-});
-
-
-
-// Função para listar agendamentos com filtro de status "aberto"
-router.get('/', async (req, res) => {
-  const { clienteId, status } = req.query;
-
-  try {
-    // Filtra o cliente e o status
-    const whereCondition = {
-      ClienteId: clienteId,
-      ...(status && { status })  // Filtra por status se passado
-    };
-
-    const agendamentos = await Agendamento.findAll({
-      where: whereCondition,
-      include: [
-        {
-          model: Servico,
-          attributes: ['nome', 'preco'],
-        },
-        {
-          model: Profissional,
-          attributes: ['nome'],
-        },
-        {
-          model: Cliente,
-          attributes: ['nome'],
-        },
-      ],
-    });
-
-    res.json(agendamentos);
-  } catch (error) {
-    console.error('Erro ao listar agendamentos:', error);
-    res.status(500).json({ error: 'Erro ao listar agendamentos' });
-  }
-});
-
 // Rota para listar agendamentos com status "concluído" e "cancelado"
 router.get('/historico', async (req, res) => {
   const { clienteId } = req.query;
 
   try {
-    const whereCondition = clienteId 
-      ? { ClienteId: clienteId, status: { [Op.in]: ['concluído', 'cancelado'] } } 
-      : { status: { [Op.in]: ['concluído', 'cancelado'] } };
+    const whereCondition = clienteId
+      ? { ClienteId: clienteId, status: { [Op.in]: ['concluido', 'cancelado'] } }
+      : { status: { [Op.in]: ['concluido', 'cancelado'] } };
 
     const agendamentosHistorico = await Agendamento.findAll({
       where: whereCondition,
@@ -167,8 +105,35 @@ router.get('/historico', async (req, res) => {
   }
 });
 
-// Exemplo de rota no arquivo routes/agendamentos.js
-// Exemplo de rota no arquivo routes/agendamentos.js
+// Rota para listar todos os agendamentos
+router.get('/todos', async (req, res) => {
+  try {
+    const agendamentos = await Agendamento.findAll({
+      include: [
+        {
+          model: Servico,
+          attributes: ['nome', 'preco'],
+        },
+        {
+          model: Profissional,
+          attributes: ['nome'],
+        },
+        {
+          model: Cliente,
+          attributes: ['nome'],
+        },
+      ],
+      order: [['data', 'ASC']],
+    });
+
+    res.json(agendamentos);
+  } catch (error) {
+    console.error('Erro ao listar todos os agendamentos:', error);
+    res.status(500).json({ error: 'Erro ao listar todos os agendamentos' });
+  }
+});
+
+// Rota para listar o próximo agendamento
 router.get('/seguinte', async (req, res) => {
   const { clienteId } = req.query;
 
@@ -176,19 +141,19 @@ router.get('/seguinte', async (req, res) => {
     const seguinteAgendamento = await Agendamento.findOne({
       where: {
         ClienteId: clienteId,
-        status: 'aberto', // ou 'pendente', dependendo da lógica do seu sistema
+        status: 'aberto',
       },
-      order: [['data', 'ASC']], // Ordena para pegar o mais próximo em data e hora
+      order: [['data', 'ASC'], ['horario', 'ASC']],
       include: [
         {
           model: Servico,
-          attributes: ['nome', 'preco', 'duracao'], // Inclui os dados desejados do serviço
+          attributes: ['nome', 'preco', 'duracao'],
         },
         {
           model: Profissional,
-          attributes: ['nome', 'especialidade'], // Inclui os dados desejados do profissional
-        }
-      ]
+          attributes: ['nome', 'especialidade'],
+        },
+      ],
     });
 
     if (seguinteAgendamento) {
@@ -203,28 +168,41 @@ router.get('/seguinte', async (req, res) => {
 });
 
 
-
 // Função para cancelar/agendar atualização de agendamento (rota PUT)
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { data, horario, servicoId, profissionalId, status, nomeCliente } = req.body;
+
   try {
     const agendamento = await Agendamento.findByPk(id);
     if (!agendamento) {
       return res.status(404).json({ error: 'Agendamento não encontrado' });
     }
+
+    // Formata o horário para "HH:mm:ss" caso esteja no formato AM/PM
+    const horarioFormatado = horario
+      ? horario.includes('AM') || horario.includes('PM')
+        ? new Date(`1970-01-01T${horario}`).toTimeString().split(' ')[0]
+        : horario
+      : agendamento.horario;
+
+    // Atualiza os campos com os valores fornecidos ou mantém os existentes
     agendamento.data = data || agendamento.data;
-    agendamento.horario = horario || agendamento.horario;
+    agendamento.horario = horarioFormatado;
     agendamento.ServicoId = servicoId || agendamento.ServicoId;
     agendamento.ProfissionalId = profissionalId || agendamento.ProfissionalId;
     agendamento.status = status || agendamento.status;
     agendamento.nomeCliente = nomeCliente || agendamento.nomeCliente;
+
     await agendamento.save();
+
     res.json({ message: 'Agendamento atualizado com sucesso', agendamento });
   } catch (error) {
     console.error('Erro ao atualizar agendamento:', error);
     res.status(500).json({ error: 'Erro ao atualizar agendamento', details: error.message });
   }
 });
+
+
 
 module.exports = router;
