@@ -69,6 +69,37 @@ router.post('/', async (req, res) => {
   }
 });
 
+
+
+router.get('/todos', async (req, res) => {
+  try {
+    const agendamentos = await Agendamento.findAll({
+      include: [
+        {
+          model: Servico,
+          attributes: ['nome', 'preco'],
+        },
+        {
+          model: Profissional,
+          attributes: ['nome'],
+        },
+        {
+          model: Cliente,
+          attributes: ['nome'],
+        },
+      ],
+      order: [['data', 'ASC']], // Ordena os agendamentos pela data
+    });
+
+    res.json(agendamentos);
+  } catch (error) {
+    console.error('Erro ao listar todos os agendamentos:', error);
+    res.status(500).json({ error: 'Erro ao listar todos os agendamentos' });
+  }
+});
+
+
+
 // Função para listar agendamentos com filtro de status "aberto"
 router.get('/', async (req, res) => {
   const { clienteId, status } = req.query;
