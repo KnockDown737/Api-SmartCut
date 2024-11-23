@@ -105,10 +105,20 @@ router.get('/historico', async (req, res) => {
   }
 });
 
-// Rota para listar todos os agendamentos
 router.get('/', async (req, res) => {
+  const { clienteId, status } = req.query;
+
   try {
+    const whereCondition = {
+      ClienteId: clienteId,
+    };
+
+    if (status) {
+      whereCondition.status = status;
+    }
+
     const agendamentos = await Agendamento.findAll({
+      where: whereCondition,
       include: [
         {
           model: Servico,
@@ -128,11 +138,10 @@ router.get('/', async (req, res) => {
 
     res.json(agendamentos);
   } catch (error) {
-    console.error('Erro ao listar todos os agendamentos:', error);
-    res.status(500).json({ error: 'Erro ao listar todos os agendamentos' });
+    console.error('Erro ao listar os agendamentos:', error);
+    res.status(500).json({ error: 'Erro ao listar os agendamentos' });
   }
 });
-
 // Rota para listar o próximo agendamento
 router.get('/seguinte', async (req, res) => {
   const { clienteId } = req.query;
