@@ -66,46 +66,15 @@ router.post('/', async (req, res) => {
   }
 });
 
-
-
-router.get('/todos', async (req, res) => {
-  try {
-    const agendamentos = await Agendamento.findAll({
-      include: [
-        {
-          model: Servico,
-          attributes: ['nome', 'preco'],
-        },
-        {
-          model: Profissional,
-          attributes: ['nome'],
-        },
-        {
-          model: Cliente,
-          attributes: ['nome'],
-        },
-      ],
-      order: [['data', 'ASC']], // Ordena os agendamentos pela data
-    });
-
-    res.json(agendamentos);
-  } catch (error) {
-    console.error('Erro ao listar todos os agendamentos:', error);
-    res.status(500).json({ error: 'Erro ao listar todos os agendamentos' });
-  }
-});
-
-
-
 // Função para listar agendamentos com filtro de status "aberto"
-router.get('/', async (req, res) => {
+router.get('/abertos', async (req, res) => {
   const { clienteId, status } = req.query;
 
   try {
     // Filtra o cliente e o status
     const whereCondition = {
       ClienteId: clienteId,
-      ...(status && { status })  // Filtra por status se passado
+      status: status || 'aberto'  // Default to 'aberto' if no status is passed
     };
 
     const agendamentos = await Agendamento.findAll({
@@ -167,43 +136,38 @@ router.get('/historico', async (req, res) => {
   }
 });
 
-// Exemplo de rota no arquivo routes/agendamentos.js
-// Exemplo de rota no arquivo routes/agendamentos.js
-router.get('/seguinte', async (req, res) => {
-  const { clienteId } = req.query;
-
+// Função para listar todos os agendamentos (usada para o admin ou sem filtro)
+router.get('/', async (req, res) => {
+  const { clienteId } = req.query; 
   try {
-    const seguinteAgendamento = await Agendamento.findOne({
-      where: {
-        ClienteId: clienteId,
-        status: 'aberto', // ou 'pendente', dependendo da lógica do seu sistema
-      },
-      order: [['data', 'ASC']], // Ordena para pegar o mais próximo em data e hora
+    const whereCondition = clienteId ? { ClienteId: clienteId } : {}; 
+    const agendamentos = await Agendamento.findAll({
+      where: whereCondition,
       include: [
         {
           model: Servico,
-          attributes: ['nome', 'preco', 'duracao'], // Inclui os dados desejados do serviço
+          attributes: ['nome', 'preco'],
         },
         {
           model: Profissional,
-          attributes: ['nome', 'especialidade'], // Inclui os dados desejados do profissional
-        }
-      ]
+          attributes: ['nome'],
+        },
+        {
+          model: Cliente,
+          attributes: ['nome'],
+        },
+      ],
     });
-
-    if (seguinteAgendamento) {
-      res.json(seguinteAgendamento);
-    } else {
-      res.status(404).json({ message: 'Nenhum agendamento próximo encontrado' });
-    }
+    const agendamentosFormatados = agendamentos.map(agendamento => ({
+      ...agendamento.dataValues,
+      data: new Date(agendamento.data).toISOString().split('T')[0]
+    }));
+    res.json(agendamentosFormatados);
   } catch (error) {
-    console.error('Erro ao buscar próximo agendamento:', error);
-    res.status(500).json({ message: 'Erro ao buscar próximo agendamento' });
+    console.error('Erro ao listar agendamentos:', error);
+    res.status(500).json({ error: 'Erro ao listar agendamentos' });
   }
 });
-
-
-
 // Função para cancelar/agendar atualização de agendamento (rota PUT)
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
