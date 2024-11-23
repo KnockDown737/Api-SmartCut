@@ -1,4 +1,4 @@
-onst express = require('express');
+const express = require('express');
 const Agendamento = require('../models/Agendamento');
 const Servico = require('../models/Servico');
 const Profissional = require('../models/Profissional');
@@ -68,7 +68,7 @@ router.post('/', async (req, res) => {
 
 
 
-router.get('/', async (req, res) => {
+router.get('/todos', async (req, res) => {
   try {
     const agendamentos = await Agendamento.findAll({
       include: [
